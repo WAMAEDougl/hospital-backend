@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:14-alpine
+    container_name: hospital-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: hospital_db
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - hospital-network
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: hospital-backend
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_DATABASE: hospital_db
+      JWT_SECRET: your_super_secret_jwt_key_change_this
+      JWT_EXPIRES_IN: 24h
+      PORT: 3000
+      NODE_ENV: production
+      CORS_ORIGIN: '*'
+    ports:
+      - '3000:3000'
+    depends_on:
+      - postgres
+    networks:
+      - hospital-network
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
+
+networks:
+  hospital-network:
+    driver: bridge
