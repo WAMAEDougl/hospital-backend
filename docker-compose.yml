@@ -1,8 +1,6 @@
-version: '3.8'
-
 services:
   postgres:
-    image: postgres:14-alpine
+    image: postgres:15
     container_name: hospital-postgres
     environment:
       POSTGRES_USER: postgres
@@ -14,6 +12,11 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - hospital-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build:
@@ -29,12 +32,13 @@ services:
       JWT_SECRET: your_super_secret_jwt_key_change_this
       JWT_EXPIRES_IN: 24h
       PORT: 3000
-      NODE_ENV: production
+      NODE_ENV: development
       CORS_ORIGIN: '*'
     ports:
       - '3000:3000'
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
     networks:
       - hospital-network
     restart: unless-stopped
