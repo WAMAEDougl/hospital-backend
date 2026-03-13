@@ -7,12 +7,13 @@ The Hospital Backend includes a comprehensive email service that automatically s
 ## Features
 
 - ✅ Automatic appointment confirmation emails
-- ✅ Appointment reminder emails (24 hours before)
-- ✅ Appointment cancellation emails
-- ✅ Appointment reschedule emails
+- ✅ Scheduled appointment reminder emails (24 hours before)
+- ✅ Automatic appointment cancellation emails
+- ✅ Automatic appointment reschedule emails
 - ✅ HTML and plain text email templates
 - ✅ Professional email design with hospital branding
 - ✅ Error handling and logging
+- ✅ Cron-based scheduled tasks
 
 ## Email Service Architecture
 
@@ -117,6 +118,47 @@ When a patient books an appointment via the API, an automatic confirmation email
 ```
 
 **Email Sent:** Appointment Confirmation Email
+
+---
+
+### Update Appointment (Automatic Cancellation/Reschedule Email)
+
+When an appointment is updated, the system automatically sends appropriate emails:
+
+**Endpoint:** `PATCH /api/appointments/:id`
+
+**Request Body (Cancel):**
+```json
+{
+  "status": "cancelled"
+}
+```
+
+**Request Body (Reschedule):**
+```json
+{
+  "appointmentDate": "2025-03-25",
+  "appointmentTime": "15:00"
+}
+```
+
+**Response:**
+```json
+{
+  "id": "appointment-uuid",
+  "patientId": "patient-uuid",
+  "doctorId": "doctor-uuid",
+  "appointmentDate": "2025-03-25",
+  "appointmentTime": "15:00",
+  "reason": "General Consultation",
+  "status": "scheduled",
+  "updatedAt": "2025-03-12T11:00:00Z"
+}
+```
+
+**Emails Sent:**
+- If cancelled: Appointment Cancellation Email
+- If rescheduled: Appointment Reschedule Email
 
 ---
 
@@ -301,33 +343,27 @@ EMAIL_PASSWORD=test
 
 ---
 
-## Scheduled Email Tasks (Future Enhancement)
+## Scheduled Email Tasks
 
-To implement appointment reminders 24 hours before:
+The email service includes automatic scheduled tasks for appointment reminders:
 
+### Appointment Reminder Task
+
+**Trigger:** Every hour (checks for appointments in next 24-25 hours)
+
+**Implementation:**
 ```typescript
-import { Cron } from '@nestjs/schedule';
-
-@Injectable()
-export class AppointmentReminderService {
-  constructor(
-    private appointmentsService: AppointmentsService,
-    private emailService: EmailService,
-  ) {}
-
-  @Cron('0 10 * * *') // Run daily at 10 AM
-  async sendReminderEmails() {
-    // Get appointments for tomorrow
-    const tomorrowAppointments = await this.appointmentsService.findTomorrow();
-    
-    for (const appointment of tomorrowAppointments) {
-      await this.emailService.sendAppointmentReminder({
-        // ... appointment details
-      });
-    }
-  }
+@Cron(CronExpression.EVERY_HOUR)
+async sendAppointmentReminders(): Promise<void> {
+  // Finds appointments scheduled for 24 hours from now
+  // Sends reminder email to patient
+  // Logs any failures without blocking
 }
 ```
+
+**Configuration:** No additional setup required - runs automatically when backend starts
+
+**Email Sent:** Appointment Reminder Email (24 hours before appointment)
 
 ---
 
