@@ -10,6 +10,7 @@ import { AppointmentsModule } from './appointments/appointments.module';
 import { PharmacyModule } from './pharmacy/pharmacy.module';
 import { BillingModule } from './billing/billing.module';
 import { PrescriptionsModule } from './prescriptions/prescriptions.module';
+import { EmailModule } from './email/email.module';
 
 @Module({
   imports: [
@@ -21,6 +22,7 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module';
     PharmacyModule,
     BillingModule,
     PrescriptionsModule,
+    EmailModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationsGateway],

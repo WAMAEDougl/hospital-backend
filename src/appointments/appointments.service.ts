@@ -4,13 +4,52 @@ import { Repository } from 'typeorm';
 import { Appointment } from '../database/entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
+import { EmailService } from '../email/email.service';
 
 @Injectable()
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
     private appointmentsRepository: Repository<Appointment>,
+    private emailService: EmailService,
   ) {}
+
+  async create(createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
+    const appointment = this.appointmentsRepository.create(createAppointmentDto);
+    const savedAppointment = await this.appointmentsRepository.save(appointment);
+
+    // Send confirmation email
+    await this.sendConfirmationEmail(savedAppointment);
+
+    return savedAppointment;
+  }
+
+  private async sendConfirmationEmail(appointment: Appointment): Promise<void> {
+    try {
+      // Load relations if not already loaded
+      const fullAppointment = await this.appointmentsRepository.findOne({
+        where: { id: appointment.id },
+        relations: ['patient', 'doctor'],
+      });
+
+      if (fullAppointment && fullAppointment.patient && fullAppointment.doctor) {
+        await this.emailService.sendAppointmentConfirmation({
+          patientName: fullAppointment.patient.name,
+          patientEmail: fullAppointment.patient.email,
+          doctorName: fullAppointment.doctor.name,
+          appointmentDate: fullAppointment.appointmentDate,
+          appointmentTime: fullAppointment.appointmentTime,
+          reason: fullAppointment.reason,
+          hospitalName: process.env.HOSPITAL_NAME || 'juja-hub Hospital',
+          hospitalPhone: process.env.HOSPITAL_PHONE || '+254746960010',
+          hospitalEmail: process.env.HOSPITAL_EMAIL || 'juja-hub@gmail.com',
+        });
+      }
+    } catch (error) {
+      console.error('Failed to send appointment confirmation email:', error);
+      // Don't throw error - appointment was created successfully
+    }
+  }
 
   async create(createAppointmentDto: CreateAppointmentDto): Promise<Appointment> {
     const appointment = this.appointmentsRepository.create(createAppointmentDto);
