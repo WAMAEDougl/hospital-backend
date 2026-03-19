@@ -6,11 +6,12 @@ import {
   ManyToOne,
   JoinColumn,
 } from 'typeorm';
-import { User } from '../database/entities/user.entity';
+import { User } from './user.entity';
 
 export enum LogAction {
   LOGIN = 'LOGIN',
   LOGOUT = 'LOGOUT',
+  OAUTH_LOGIN = 'OAUTH_LOGIN',
   CREATE_USER = 'CREATE_USER',
   UPDATE_USER = 'UPDATE_USER',
   DELETE_USER = 'DELETE_USER',

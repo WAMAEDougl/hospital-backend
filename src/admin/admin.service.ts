@@ -11,11 +11,11 @@ import { User, UserRole } from '../database/entities/user.entity';
 import { LogsService } from '../logs/logs.service';
 import { LogAction } from '../database/entities/log.entity';
 
-export interface InviteUserDto {
+export class InviteUserDto {
   email: string;
   firstName: string;
   lastName: string;
-  phone: string;
+  phone?: string;
   role: UserRole;
   temporaryPassword?: string;
 }

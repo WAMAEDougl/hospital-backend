@@ -2,16 +2,18 @@ import {
   Injectable,
   UnauthorizedException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { User } from '../database/entities/user.entity';
+import { User, UserRole } from '../database/entities/user.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { LogsService } from '../logs/logs.service';
 import { LogAction } from '../database/entities/log.entity';
+import * as https from 'https';
 
 @Injectable()
 export class AuthService {
@@ -22,25 +24,44 @@ export class AuthService {
     private logsService: LogsService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
-    const existingUser = await this.userRepository.findOne({
-      where: { email: registerDto.email },
-    });
+  // Public registration is disabled - only admins can create accounts
+  async register(_registerDto: RegisterDto) {
+    throw new BadRequestException(
+      'Self-registration is disabled. Please contact an administrator to create your account.',
+    );
+  }
 
-    if (existingUser) {
-      throw new ConflictException('User with this email already exists');
+  async googleLogin(idToken: string) {
+    // Verify the Google ID token by calling Google's tokeninfo endpoint
+    const googleUser = await this.verifyGoogleToken(idToken);
+
+    if (!googleUser || !googleUser.email) {
+      throw new UnauthorizedException('Invalid Google token');
     }
 
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-
-    const user = this.userRepository.create({
-      ...registerDto,
-      password: hashedPassword,
+    // Find or create user
+    let user = await this.userRepository.findOne({
+      where: { email: googleUser.email },
     });
 
-    await this.userRepository.save(user);
+    if (!user) {
+      throw new UnauthorizedException(
+        'No account found for this Google account. Please contact an administrator.',
+      );
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Account is deactivated');
+    }
 
     const token = this.generateToken(user);
+
+    await this.logsService.createLog(
+      LogAction.LOGIN,
+      `User logged in via Google: ${user.email}`,
+      user.id,
+      JSON.stringify({ email: user.email, role: user.role, provider: 'google' }),
+    );
 
     return {
       accessToken: token,
@@ -52,6 +73,28 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  private verifyGoogleToken(idToken: string): Promise<{ email: string; name: string; sub: string }> {
+    return new Promise((resolve, reject) => {
+      const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
+      https.get(url, (res) => {
+        let data = '';
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () => {
+          try {
+            const parsed = JSON.parse(data);
+            if (parsed.error) {
+              reject(new UnauthorizedException('Invalid Google token: ' + parsed.error));
+            } else {
+              resolve({ email: parsed.email, name: parsed.name, sub: parsed.sub });
+            }
+          } catch {
+            reject(new UnauthorizedException('Failed to parse Google token response'));
+          }
+        });
+      }).on('error', (err) => reject(err));
+    });
   }
 
   async login(loginDto: LoginDto) {

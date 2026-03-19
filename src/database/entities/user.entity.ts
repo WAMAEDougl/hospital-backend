@@ -25,7 +25,7 @@ export class User {
   @Column({ unique: true })
   email: string;
 
-  @Column()
+  @Column({ nullable: true })
   password: string;
 
   @Column({
@@ -41,11 +41,17 @@ export class User {
   @Column()
   lastName: string;
 
-  @Column()
+  @Column({ nullable: true })
   phone: string;
 
   @Column({ default: true })
   isActive: boolean;
+
+  @Column({ nullable: true })
+  googleId: string;
+
+  @Column({ nullable: true })
+  profilePicture: string;
 
   @CreateDateColumn()
   createdAt: Date;
