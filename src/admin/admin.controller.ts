@@ -10,7 +10,8 @@ import {
   Request,
   Query,
 } from '@nestjs/common';
-import { AdminService, InviteUserDto } from './admin.service';
+import { AdminService } from './admin.service';
+import { InviteUserDto } from './dto/invite-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';

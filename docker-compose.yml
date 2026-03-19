@@ -34,6 +34,7 @@ services:
       PORT: 3000
       NODE_ENV: development
       CORS_ORIGIN: '*'
+      GOOGLE_CLIENT_ID: 930802720483-s3fpk4q045bf7638k19hoa8lh35s2k67.apps.googleusercontent.com
     ports:
       - '3000:3000'
     depends_on:

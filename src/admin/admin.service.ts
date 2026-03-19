@@ -10,15 +10,9 @@ import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../database/entities/user.entity';
 import { LogsService } from '../logs/logs.service';
 import { LogAction } from '../database/entities/log.entity';
+import { InviteUserDto } from './dto/invite-user.dto';
 
-export class InviteUserDto {
-  email: string;
-  firstName: string;
-  lastName: string;
-  phone?: string;
-  role: UserRole;
-  temporaryPassword?: string;
-}
+export { InviteUserDto };
 
 @Injectable()
 export class AdminService {
