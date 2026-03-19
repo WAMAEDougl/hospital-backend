@@ -4,6 +4,11 @@ import * as dotenv from 'dotenv';
 
 dotenv.config();
 
+const isCompiled = __filename.endsWith('.js');
+const entityPath = isCompiled
+  ? 'dist/database/entities/*.entity.js'
+  : 'src/database/entities/*.entity.ts';
+
 const AppDataSource = new DataSource({
   type: 'postgres',
   host: process.env.DB_HOST || 'localhost',
@@ -11,7 +16,7 @@ const AppDataSource = new DataSource({
   username: process.env.DB_USERNAME || 'postgres',
   password: process.env.DB_PASSWORD || 'postgres',
   database: process.env.DB_DATABASE || 'hospital_db',
-  entities: ['src/database/entities/*.entity.ts'],
+  entities: [entityPath],
   synchronize: false,
 });
 
