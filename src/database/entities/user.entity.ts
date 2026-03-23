@@ -53,6 +53,37 @@ export class User {
   @Column({ nullable: true })
   profilePicture: string;
 
+  // Employment details
+  @Column({ nullable: true })
+  employeeId: string;
+
+  @Column({ nullable: true })
+  department: string;
+
+  @Column({ nullable: true })
+  specialization: string;
+
+  @Column({ nullable: true })
+  dateOfBirth: string;
+
+  @Column({ nullable: true })
+  gender: string;
+
+  @Column({ nullable: true })
+  address: string;
+
+  @Column({ nullable: true })
+  emergencyContactName: string;
+
+  @Column({ nullable: true })
+  emergencyContactPhone: string;
+
+  @Column({ nullable: true })
+  startDate: string;
+
+  @Column({ nullable: true })
+  terminationReason: string;
+
   @CreateDateColumn()
   createdAt: Date;
 

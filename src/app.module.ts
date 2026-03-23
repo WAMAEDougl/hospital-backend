@@ -14,6 +14,7 @@ import { PrescriptionsModule } from './prescriptions/prescriptions.module';
 import { EmailModule } from './email/email.module';
 import { LogsModule } from './logs/logs.module';
 import { AdminModule } from './admin/admin.module';
+import { HrModule } from './hr/hr.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { AdminModule } from './admin/admin.module';
     EmailModule,
     LogsModule,
     AdminModule,
+    HrModule,
   ],
   controllers: [AppController],
   providers: [AppService, NotificationsGateway],

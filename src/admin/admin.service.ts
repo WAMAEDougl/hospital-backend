@@ -57,6 +57,15 @@ export class AdminService {
       password: hashedPassword,
       role: inviteDto.role,
       isActive: true,
+      employeeId: inviteDto.employeeId,
+      department: inviteDto.department,
+      specialization: inviteDto.specialization,
+      dateOfBirth: inviteDto.dateOfBirth,
+      gender: inviteDto.gender,
+      address: inviteDto.address,
+      emergencyContactName: inviteDto.emergencyContactName,
+      emergencyContactPhone: inviteDto.emergencyContactPhone,
+      startDate: inviteDto.startDate || new Date().toISOString().split('T')[0],
     });
 
     await this.userRepository.save(user);
@@ -114,6 +123,15 @@ export class AdminService {
       password: hashedPassword,
       role: createUserDto.role,
       isActive: true,
+      employeeId: createUserDto.employeeId,
+      department: createUserDto.department,
+      specialization: createUserDto.specialization,
+      dateOfBirth: createUserDto.dateOfBirth,
+      gender: createUserDto.gender,
+      address: createUserDto.address,
+      emergencyContactName: createUserDto.emergencyContactName,
+      emergencyContactPhone: createUserDto.emergencyContactPhone,
+      startDate: createUserDto.startDate || new Date().toISOString().split('T')[0],
     });
 
     await this.userRepository.save(user);
@@ -164,6 +182,14 @@ export class AdminService {
     if (updateData.lastName) user.lastName = updateData.lastName;
     if (updateData.phone) user.phone = updateData.phone;
     if (updateData.role) user.role = updateData.role;
+    if (updateData.department !== undefined) user.department = updateData.department;
+    if (updateData.specialization !== undefined) user.specialization = updateData.specialization;
+    if (updateData.dateOfBirth !== undefined) user.dateOfBirth = updateData.dateOfBirth;
+    if (updateData.gender !== undefined) user.gender = updateData.gender;
+    if (updateData.address !== undefined) user.address = updateData.address;
+    if (updateData.emergencyContactName !== undefined) user.emergencyContactName = updateData.emergencyContactName;
+    if (updateData.emergencyContactPhone !== undefined) user.emergencyContactPhone = updateData.emergencyContactPhone;
+    if (updateData.employeeId !== undefined) user.employeeId = updateData.employeeId;
 
     await this.userRepository.save(user);
 
@@ -225,6 +251,16 @@ export class AdminService {
         role: user.role,
         isActive: user.isActive,
         createdAt: user.createdAt,
+        employeeId: user.employeeId,
+        department: user.department,
+        specialization: user.specialization,
+        dateOfBirth: user.dateOfBirth,
+        gender: user.gender,
+        address: user.address,
+        emergencyContactName: user.emergencyContactName,
+        emergencyContactPhone: user.emergencyContactPhone,
+        startDate: user.startDate,
+        terminationReason: user.terminationReason,
       })),
       total,
       page,
@@ -276,6 +312,31 @@ export class AdminService {
         activatedUserId: user.id,
         activatedEmail: user.email,
       }),
+    );
+
+    return user;
+  }
+
+  async terminateUser(userId: string, reason: string, adminId: string): Promise<User> {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    if (user.role === UserRole.ADMIN) {
+      throw new BadRequestException('Cannot terminate admin users');
+    }
+
+    user.isActive = false;
+    user.terminationReason = reason;
+    await this.userRepository.save(user);
+
+    await this.logsService.createLog(
+      LogAction.UPDATE_USER,
+      `Admin terminated employment of: ${user.email}. Reason: ${reason}`,
+      adminId,
+      JSON.stringify({ terminatedUserId: user.id, terminatedEmail: user.email, reason }),
     );
 
     return user;

@@ -60,6 +60,15 @@ export class AdminController {
     return this.adminService.deactivateUser(userId, req.user.userId);
   }
 
+  @Patch('users/:userId/terminate')
+  async terminateUser(
+    @Param('userId') userId: string,
+    @Body('reason') reason: string,
+    @Request() req,
+  ) {
+    return this.adminService.terminateUser(userId, reason || 'No reason provided', req.user.userId);
+  }
+
   @Patch('users/:userId/activate')
   async activateUser(@Param('userId') userId: string, @Request() req) {
     return this.adminService.activateUser(userId, req.user.userId);
